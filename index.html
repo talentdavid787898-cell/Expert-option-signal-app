@@ -1,59 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
-  <title>Expert Option Signal App</title>
+  <title>Live Market Signal</title>
 
   <style>
-
     * {
       box-sizing: border-box;
     }
 
     body {
       margin: 0;
-      min-height: 100vh;
-      background: #101010;
-      color: white;
+      background: #111;
+      color: #fff;
       font-family: Arial, sans-serif;
     }
 
-    .app {
-      width: 92%;
-      max-width: 500px;
-      margin: auto;
-      padding: 35px 0;
+    header {
       text-align: center;
+      padding: 35px 20px 20px;
     }
 
-    h1 {
+    header h1 {
+      margin: 0;
       font-size: 30px;
-      margin-bottom: 8px;
     }
 
-    .subtitle {
-      color: #999;
+    header p {
+      color: #aaa;
       font-size: 18px;
-      margin-bottom: 25px;
     }
 
-    .panel {
-      background: #1d1d1d;
-      border-radius: 22px;
-      padding: 25px;
-      margin-bottom: 25px;
+    .card {
+      max-width: 650px;
+      margin: 20px auto;
+      padding: 28px;
+      background: #202020;
+      border-radius: 25px;
     }
 
     label {
       display: block;
-      text-align: left;
       color: #bbb;
       font-size: 18px;
       margin-bottom: 10px;
@@ -63,14 +52,14 @@
     button {
       width: 100%;
       padding: 18px;
-      border: 0;
-      border-radius: 15px;
+      border-radius: 16px;
+      border: none;
       font-size: 18px;
-      margin-bottom: 20px;
+      margin-bottom: 25px;
     }
 
     select {
-      background: #292929;
+      background: #2d2d2d;
       color: white;
     }
 
@@ -82,32 +71,31 @@
     }
 
     button:active {
-      transform: scale(0.98);
+      transform: scale(.99);
     }
 
-    .status {
+    #status {
+      text-align: center;
       color: #aaa;
-      font-size: 16px;
+      margin-bottom: 5px;
     }
 
     .signal-card {
-      background: #222;
-      border-radius: 22px;
-      padding: 30px 20px;
+      text-align: center;
     }
 
-    .signal {
-      font-size: 54px;
+    #signal {
+      font-size: 64px;
       font-weight: bold;
-      margin-bottom: 10px;
+      margin: 10px 0;
     }
 
     .call {
-      color: #00d26a;
+      color: #00e676;
     }
 
     .put {
-      color: #ff5b5b;
+      color: #ff5252;
     }
 
     .wait {
@@ -115,239 +103,205 @@
     }
 
     .confidence {
-      font-size: 23px;
+      font-size: 26px;
       margin-bottom: 25px;
     }
 
-    .info {
-      color: #aaa;
-      font-size: 17px;
-      line-height: 1.8;
+    .data {
+      color: #bbb;
+      font-size: 18px;
+      line-height: 1.9;
     }
 
     .warning {
-      color: #888;
-      font-size: 13px;
       margin-top: 25px;
-      line-height: 1.5;
+      color: #888;
+      font-size: 14px;
+      line-height: 1.6;
     }
 
     .updated {
       color: #777;
-      font-size: 12px;
+      font-size: 13px;
       margin-top: 15px;
     }
-
   </style>
 </head>
 
 <body>
 
-  <div class="app">
+<header>
+  <h1>Live Market Signal Analysis</h1>
+  <p>Market data powered by Twelve Data</p>
+</header>
 
-    <h1>Expert Option Signal App</h1>
+<div class="card">
 
-    <div class="subtitle">
-      Live Market Signal Analysis
-    </div>
+  <label for="market">Market</label>
 
-    <div class="panel">
+  <select id="market">
+    <option value="EUR/USD">EUR/USD</option>
+  </select>
 
-      <label>Market</label>
+  <label for="interval">Analysis</label>
 
-      <select id="market">
-        <option value="EUR/USD">
-          EUR/USD
-        </option>
-      </select>
+  <select id="interval">
+    <option value="1min">1 Minute</option>
+  </select>
 
-      <label>Analysis</label>
+  <button onclick="getSignal()">
+    GET LIVE SIGNAL
+  </button>
 
-      <select id="interval">
-        <option value="1min">
-          1 Minute
-        </option>
-      </select>
+  <div id="status">
+    Loading latest market analysis...
+  </div>
 
-      <button onclick="getSignal()">
-        GET LIVE SIGNAL
-      </button>
+</div>
 
-      <div class="status" id="status">
-        Loading latest market data...
-      </div>
+<div class="card signal-card">
 
-    </div>
+  <div id="signal" class="wait">
+    WAIT
+  </div>
 
-    <div class="signal-card">
+  <div class="confidence">
+    Confidence: <span id="confidence">--</span>%
+  </div>
 
-      <div
-        id="signal"
-        class="signal wait"
-      >
-        WAIT
-      </div>
+  <div class="data">
 
-      <div
-        id="confidence"
-        class="confidence"
-      >
-        Confidence: --
-      </div>
+    Market:
+    <span id="symbol">--</span>
+    <br>
 
-      <div
-        id="info"
-        class="info"
-      >
-        Waiting for live market analysis...
-      </div>
+    Price:
+    <span id="price">--</span>
+    <br>
 
-      <div class="warning">
-        Market data is provided by Twelve Data.
-        Signals are statistical analysis, not guaranteed predictions.
-        Do not risk money you cannot afford to lose.
-      </div>
+    RSI:
+    <span id="rsi">--</span>
+    <br>
 
-      <div
-        id="updated"
-        class="updated"
-      >
-      </div>
+    EMA 9:
+    <span id="ema9">--</span>
+    <br>
 
-    </div>
+    EMA 21:
+    <span id="ema21">--</span>
+    <br>
+
+    Momentum:
+    <span id="momentum">--</span>%
+    <br>
+
+    Candle:
+    <span id="candle">--</span>
 
   </div>
 
-  <script>
+  <div class="updated">
+    Last update:
+    <span id="updated">--</span>
+  </div>
 
-    async function getSignal() {
+  <div class="warning">
+    Market data is provided by Twelve Data.
+    Signals are statistical analysis, not guaranteed predictions.
+    Do not risk money you cannot afford to lose.
+  </div>
 
-      const status =
-        document.getElementById("status");
+</div>
 
-      const signalElement =
-        document.getElementById("signal");
+<script>
 
-      const confidenceElement =
-        document.getElementById("confidence");
+async function getSignal() {
 
-      const infoElement =
-        document.getElementById("info");
+  const status = document.getElementById("status");
 
-      const updatedElement =
-        document.getElementById("updated");
+  status.textContent = "Getting latest available signal...";
 
-      status.textContent =
-        "Getting latest market analysis...";
+  try {
 
-      try {
-
-        const response = await fetch(
-          "signal.json?t=" + Date.now(),
-          {
-            cache: "no-store"
-          }
-        );
-
-        if (!response.ok) {
-          throw new Error(
-            "Signal file is not available yet."
-          );
-        }
-
-        const data =
-          await response.json();
-
-        if (!data.success) {
-          throw new Error(
-            "Signal generation failed."
-          );
-        }
-
-        signalElement.textContent =
-          data.signal;
-
-        signalElement.className =
-          "signal " +
-          (
-            data.signal === "CALL"
-              ? "call"
-              : data.signal === "PUT"
-                ? "put"
-                : "wait"
-          );
-
-        confidenceElement.textContent =
-          "Confidence: " +
-          data.confidence +
-          "%";
-
-        infoElement.innerHTML =
-          "Market: " +
-          data.symbol +
-          "<br>" +
-
-          "Price: " +
-          data.price +
-          "<br>" +
-
-          "RSI: " +
-          data.rsi14 +
-          "<br>" +
-
-          "EMA 9: " +
-          data.ema9 +
-          "<br>" +
-
-          "EMA 21: " +
-          data.ema21 +
-          "<br>" +
-
-          "Momentum: " +
-          data.momentumPercent +
-          "%<br>" +
-
-          "Candle: " +
-          data.candleTime;
-
-        updatedElement.textContent =
-          "Analysis updated: " +
-          new Date(data.generatedAt)
-            .toLocaleString();
-
-        status.textContent =
-          "Live market analysis loaded.";
-
-      } catch (error) {
-
-        console.error(error);
-
-        status.textContent =
-          "Waiting for GitHub Actions to generate the first signal.";
-
-        signalElement.textContent =
-          "WAIT";
-
-        signalElement.className =
-          "signal wait";
-
-        confidenceElement.textContent =
-          "Confidence: --";
-
-        infoElement.textContent =
-          error.message;
+    // Cache-buster so the browser doesn't keep showing
+    // an old signal.json.
+    const response = await fetch(
+      "signal.json?t=" + Date.now(),
+      {
+        cache: "no-store"
       }
-    }
-
-    getSignal();
-
-    setInterval(
-      getSignal,
-      60000
     );
 
-  </script>
+    if (!response.ok) {
+      throw new Error(
+        "signal.json returned HTTP " + response.status
+      );
+    }
+
+    const data = await response.json();
+
+    if (data.status !== "ok") {
+      throw new Error("Invalid signal data.");
+    }
+
+    const signal = document.getElementById("signal");
+
+    signal.textContent = data.signal;
+
+    signal.className = "";
+
+    if (data.signal === "CALL") {
+      signal.classList.add("call");
+    } else if (data.signal === "PUT") {
+      signal.classList.add("put");
+    } else {
+      signal.classList.add("wait");
+    }
+
+    document.getElementById("confidence").textContent =
+      data.confidence;
+
+    document.getElementById("symbol").textContent =
+      data.symbol;
+
+    document.getElementById("price").textContent =
+      data.price;
+
+    document.getElementById("rsi").textContent =
+      data.rsi;
+
+    document.getElementById("ema9").textContent =
+      data.ema9;
+
+    document.getElementById("ema21").textContent =
+      data.ema21;
+
+    document.getElementById("momentum").textContent =
+      data.momentum;
+
+    document.getElementById("candle").textContent =
+      data.candle + " UTC";
+
+    document.getElementById("updated").textContent =
+      new Date(data.updatedAt).toLocaleString();
+
+    status.textContent =
+      "Latest published market analysis loaded.";
+
+  } catch (error) {
+
+    console.error(error);
+
+    status.textContent =
+      "Unable to load the latest signal. Try again shortly.";
+  }
+}
+
+
+// Load when page opens.
+getSignal();
+
+</script>
 
 </body>
-
-          </html>
+</html>
