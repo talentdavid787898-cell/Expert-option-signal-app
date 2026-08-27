@@ -1,62 +1,270 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Expert Option Signal App</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Expert Option Signal App</title>
 
-    <style>
-        body {
-            margin: 0;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: #141414;
-            color: white;
-            font-family: Arial, sans-serif;
-        }
+<style>
+* {
+    box-sizing: border-box;
+}
 
-        .app {
-            width: 90%;
-            max-width: 450px;
-            text-align: center;
-        }
+body {
+    margin: 0;
+    min-height: 100vh;
+    background: #111111;
+    color: white;
+    font-family: Arial, sans-serif;
+}
 
-        h1 {
-            font-size: 28px;
-            margin-bottom: 40px;
-        }
+.app {
+    width: 92%;
+    max-width: 480px;
+    margin: auto;
+    padding: 45px 0;
+    text-align: center;
+}
 
-        .signal {
-            font-size: 30px;
-            font-weight: bold;
-            padding: 30px;
-            border-radius: 15px;
-            background: #2196f3;
-        }
+h1 {
+    font-size: 28px;
+    margin-bottom: 10px;
+}
 
-        .status {
-            margin-top: 20px;
-            font-size: 16px;
-            color: #bbbbbb;
-        }
-    </style>
+.subtitle {
+    color: #999;
+    margin-bottom: 30px;
+}
+
+.card {
+    background: #1c1c1c;
+    border-radius: 18px;
+    padding: 22px;
+    margin-bottom: 18px;
+}
+
+label {
+    display: block;
+    text-align: left;
+    color: #aaa;
+    margin-bottom: 8px;
+}
+
+select {
+    width: 100%;
+    padding: 15px;
+    border: 0;
+    border-radius: 10px;
+    background: #292929;
+    color: white;
+    font-size: 16px;
+    margin-bottom: 18px;
+}
+
+button {
+    width: 100%;
+    padding: 20px;
+    border: 0;
+    border-radius: 14px;
+    background: #2196f3;
+    color: white;
+    font-size: 22px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+.status {
+    margin-top: 18px;
+    color: #aaa;
+}
+
+.signal {
+    display: none;
+    margin-top: 20px;
+    padding: 25px;
+    border-radius: 16px;
+    background: #242424;
+}
+
+.signal-direction {
+    font-size: 42px;
+    font-weight: bold;
+    margin: 10px 0;
+}
+
+.call {
+    color: #36d278;
+}
+
+.put {
+    color: #ff5c5c;
+}
+
+.confidence {
+    font-size: 20px;
+    margin: 12px 0;
+}
+
+.details {
+    color: #aaa;
+    line-height: 1.7;
+}
+
+.demo {
+    margin-top: 25px;
+    font-size: 12px;
+    color: #777;
+}
+</style>
 </head>
 
 <body>
 
-    <div class="app">
-        <h1>Expert Option Signal App</h1>
+<div class="app">
 
-        <div class="signal">
-            WAIT FOR SIGNAL
-        </div>
+    <h1>Expert Option Signal App</h1>
 
-        <div class="status">
-            Signal system is ready.
-        </div>
+    <div class="subtitle">
+        Market Signal Analysis
     </div>
 
+    <div class="card">
+
+        <label for="market">Select Market</label>
+
+        <select id="market">
+            <option>EUR/USD</option>
+            <option>GBP/USD</option>
+            <option>USD/JPY</option>
+            <option>USD/CAD</option>
+            <option>AUD/USD</option>
+        </select>
+
+        <label for="expiry">Expiry</label>
+
+        <select id="expiry">
+            <option>1 Minute</option>
+            <option>5 Minutes</option>
+            <option>15 Minutes</option>
+        </select>
+
+        <button onclick="generateSignal()">
+            GET SIGNAL
+        </button>
+
+        <div class="status" id="status">
+            Signal system is ready.
+        </div>
+
+    </div>
+
+    <div class="signal" id="signalBox">
+
+        <div id="direction" class="signal-direction">
+            CALL
+        </div>
+
+        <div class="confidence" id="confidence">
+            Confidence: 75%
+        </div>
+
+        <div class="details">
+            Market: <span id="signalMarket"></span><br>
+            Expiry: <span id="signalExpiry"></span><br>
+            Time: <span id="signalTime"></span>
+        </div>
+
+    </div>
+
+    <div class="demo">
+        DEMO ANALYSIS — Signals are not guaranteed predictions.
+    </div>
+
+</div>
+
+<script>
+
+function generateSignal() {
+
+    const market =
+        document.getElementById("market").value;
+
+    const expiry =
+        document.getElementById("expiry").value;
+
+    const status =
+        document.getElementById("status");
+
+    const signalBox =
+        document.getElementById("signalBox");
+
+    const direction =
+        document.getElementById("direction");
+
+    const confidence =
+        document.getElementById("confidence");
+
+    const signalMarket =
+        document.getElementById("signalMarket");
+
+    const signalExpiry =
+        document.getElementById("signalExpiry");
+
+    const signalTime =
+        document.getElementById("signalTime");
+
+    status.innerText = "Analyzing market...";
+
+    signalBox.style.display = "none";
+
+    setTimeout(function() {
+
+        /*
+         * Temporary demo engine.
+         * This will be replaced with real market-price
+         * analysis in the next stage.
+         */
+
+        const randomNumber = Math.random();
+
+        let signal;
+
+        if (randomNumber >= 0.5) {
+            signal = "CALL";
+        } else {
+            signal = "PUT";
+        }
+
+        const confidenceValue =
+            Math.floor(60 + Math.random() * 31);
+
+        direction.innerText = signal;
+        confidence.innerText =
+            "Confidence: " + confidenceValue + "%";
+
+        direction.className =
+            "signal-direction " +
+            (signal === "CALL" ? "call" : "put");
+
+        signalMarket.innerText = market;
+        signalExpiry.innerText = expiry;
+
+        signalTime.innerText =
+            new Date().toLocaleTimeString();
+
+        signalBox.style.display = "block";
+
+        status.innerText =
+            "Analysis complete.";
+
+    }, 1200);
+}
+
+</script>
+
 </body>
-                                      </html>
+    </html>
