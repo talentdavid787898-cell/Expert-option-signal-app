@@ -1,0 +1,17 @@
+{
+  "success": true,
+  "source": "Twelve Data",
+  "symbol": "EUR/USD",
+  "interval": "1min",
+  "signal": "PUT",
+  "confidence": 76,
+  "price": 1.16505,
+  "ema9": 1.165119,
+  "ema21": 1.165142,
+  "rsi14": 43.54,
+  "momentumPercent": -0.0094,
+  "candleTime": "2026-08-28 07:11:00",
+  "generatedAt": "2026-08-27T21:12:38.720Z",
+  "methodology": "EMA trend + RSI + short-term momentum",
+  "warning": "Market analysis is probabilistic and is not a guaranteed prediction."
+}
