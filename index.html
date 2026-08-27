@@ -1,270 +1,353 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Expert Option Signal App</title>
+  <meta charset="UTF-8">
 
-<style>
-* {
-    box-sizing: border-box;
-}
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
-body {
-    margin: 0;
-    min-height: 100vh;
-    background: #111111;
-    color: white;
-    font-family: Arial, sans-serif;
-}
+  <title>Expert Option Signal App</title>
 
-.app {
-    width: 92%;
-    max-width: 480px;
-    margin: auto;
-    padding: 45px 0;
-    text-align: center;
-}
+  <style>
 
-h1 {
-    font-size: 28px;
-    margin-bottom: 10px;
-}
+    * {
+      box-sizing: border-box;
+    }
 
-.subtitle {
-    color: #999;
-    margin-bottom: 30px;
-}
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #101010;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
 
-.card {
-    background: #1c1c1c;
-    border-radius: 18px;
-    padding: 22px;
-    margin-bottom: 18px;
-}
+    .app {
+      width: 92%;
+      max-width: 500px;
+      margin: auto;
+      padding: 35px 0;
+      text-align: center;
+    }
 
-label {
-    display: block;
-    text-align: left;
-    color: #aaa;
-    margin-bottom: 8px;
-}
+    h1 {
+      font-size: 30px;
+      margin-bottom: 8px;
+    }
 
-select {
-    width: 100%;
-    padding: 15px;
-    border: 0;
-    border-radius: 10px;
-    background: #292929;
-    color: white;
-    font-size: 16px;
-    margin-bottom: 18px;
-}
+    .subtitle {
+      color: #999;
+      font-size: 18px;
+      margin-bottom: 25px;
+    }
 
-button {
-    width: 100%;
-    padding: 20px;
-    border: 0;
-    border-radius: 14px;
-    background: #2196f3;
-    color: white;
-    font-size: 22px;
-    font-weight: bold;
-    cursor: pointer;
-}
+    .panel {
+      background: #1d1d1d;
+      border-radius: 22px;
+      padding: 25px;
+      margin-bottom: 25px;
+    }
 
-button:active {
-    transform: scale(0.98);
-}
+    label {
+      display: block;
+      text-align: left;
+      color: #bbb;
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
 
-.status {
-    margin-top: 18px;
-    color: #aaa;
-}
+    select,
+    button {
+      width: 100%;
+      padding: 18px;
+      border: 0;
+      border-radius: 15px;
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
 
-.signal {
-    display: none;
-    margin-top: 20px;
-    padding: 25px;
-    border-radius: 16px;
-    background: #242424;
-}
+    select {
+      background: #292929;
+      color: white;
+    }
 
-.signal-direction {
-    font-size: 42px;
-    font-weight: bold;
-    margin: 10px 0;
-}
+    button {
+      background: #2196f3;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+    }
 
-.call {
-    color: #36d278;
-}
+    button:active {
+      transform: scale(0.98);
+    }
 
-.put {
-    color: #ff5c5c;
-}
+    .status {
+      color: #aaa;
+      font-size: 16px;
+    }
 
-.confidence {
-    font-size: 20px;
-    margin: 12px 0;
-}
+    .signal-card {
+      background: #222;
+      border-radius: 22px;
+      padding: 30px 20px;
+    }
 
-.details {
-    color: #aaa;
-    line-height: 1.7;
-}
+    .signal {
+      font-size: 54px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
 
-.demo {
-    margin-top: 25px;
-    font-size: 12px;
-    color: #777;
-}
-</style>
+    .call {
+      color: #00d26a;
+    }
+
+    .put {
+      color: #ff5b5b;
+    }
+
+    .wait {
+      color: #ffc107;
+    }
+
+    .confidence {
+      font-size: 23px;
+      margin-bottom: 25px;
+    }
+
+    .info {
+      color: #aaa;
+      font-size: 17px;
+      line-height: 1.8;
+    }
+
+    .warning {
+      color: #888;
+      font-size: 13px;
+      margin-top: 25px;
+      line-height: 1.5;
+    }
+
+    .updated {
+      color: #777;
+      font-size: 12px;
+      margin-top: 15px;
+    }
+
+  </style>
 </head>
 
 <body>
 
-<div class="app">
+  <div class="app">
 
     <h1>Expert Option Signal App</h1>
 
     <div class="subtitle">
-        Market Signal Analysis
+      Live Market Signal Analysis
     </div>
 
-    <div class="card">
+    <div class="panel">
 
-        <label for="market">Select Market</label>
+      <label>Market</label>
 
-        <select id="market">
-            <option>EUR/USD</option>
-            <option>GBP/USD</option>
-            <option>USD/JPY</option>
-            <option>USD/CAD</option>
-            <option>AUD/USD</option>
-        </select>
+      <select id="market">
+        <option value="EUR/USD">
+          EUR/USD
+        </option>
+      </select>
 
-        <label for="expiry">Expiry</label>
+      <label>Analysis</label>
 
-        <select id="expiry">
-            <option>1 Minute</option>
-            <option>5 Minutes</option>
-            <option>15 Minutes</option>
-        </select>
+      <select id="interval">
+        <option value="1min">
+          1 Minute
+        </option>
+      </select>
 
-        <button onclick="generateSignal()">
-            GET SIGNAL
-        </button>
+      <button onclick="getSignal()">
+        GET LIVE SIGNAL
+      </button>
 
-        <div class="status" id="status">
-            Signal system is ready.
-        </div>
-
-    </div>
-
-    <div class="signal" id="signalBox">
-
-        <div id="direction" class="signal-direction">
-            CALL
-        </div>
-
-        <div class="confidence" id="confidence">
-            Confidence: 75%
-        </div>
-
-        <div class="details">
-            Market: <span id="signalMarket"></span><br>
-            Expiry: <span id="signalExpiry"></span><br>
-            Time: <span id="signalTime"></span>
-        </div>
+      <div class="status" id="status">
+        Loading latest market data...
+      </div>
 
     </div>
 
-    <div class="demo">
-        DEMO ANALYSIS — Signals are not guaranteed predictions.
+    <div class="signal-card">
+
+      <div
+        id="signal"
+        class="signal wait"
+      >
+        WAIT
+      </div>
+
+      <div
+        id="confidence"
+        class="confidence"
+      >
+        Confidence: --
+      </div>
+
+      <div
+        id="info"
+        class="info"
+      >
+        Waiting for live market analysis...
+      </div>
+
+      <div class="warning">
+        Market data is provided by Twelve Data.
+        Signals are statistical analysis, not guaranteed predictions.
+        Do not risk money you cannot afford to lose.
+      </div>
+
+      <div
+        id="updated"
+        class="updated"
+      >
+      </div>
+
     </div>
 
-</div>
+  </div>
 
-<script>
+  <script>
 
-function generateSignal() {
+    async function getSignal() {
 
-    const market =
-        document.getElementById("market").value;
-
-    const expiry =
-        document.getElementById("expiry").value;
-
-    const status =
+      const status =
         document.getElementById("status");
 
-    const signalBox =
-        document.getElementById("signalBox");
+      const signalElement =
+        document.getElementById("signal");
 
-    const direction =
-        document.getElementById("direction");
-
-    const confidence =
+      const confidenceElement =
         document.getElementById("confidence");
 
-    const signalMarket =
-        document.getElementById("signalMarket");
+      const infoElement =
+        document.getElementById("info");
 
-    const signalExpiry =
-        document.getElementById("signalExpiry");
+      const updatedElement =
+        document.getElementById("updated");
 
-    const signalTime =
-        document.getElementById("signalTime");
+      status.textContent =
+        "Getting latest market analysis...";
 
-    status.innerText = "Analyzing market...";
+      try {
 
-    signalBox.style.display = "none";
+        const response = await fetch(
+          "signal.json?t=" + Date.now(),
+          {
+            cache: "no-store"
+          }
+        );
 
-    setTimeout(function() {
-
-        /*
-         * Temporary demo engine.
-         * This will be replaced with real market-price
-         * analysis in the next stage.
-         */
-
-        const randomNumber = Math.random();
-
-        let signal;
-
-        if (randomNumber >= 0.5) {
-            signal = "CALL";
-        } else {
-            signal = "PUT";
+        if (!response.ok) {
+          throw new Error(
+            "Signal file is not available yet."
+          );
         }
 
-        const confidenceValue =
-            Math.floor(60 + Math.random() * 31);
+        const data =
+          await response.json();
 
-        direction.innerText = signal;
-        confidence.innerText =
-            "Confidence: " + confidenceValue + "%";
+        if (!data.success) {
+          throw new Error(
+            "Signal generation failed."
+          );
+        }
 
-        direction.className =
-            "signal-direction " +
-            (signal === "CALL" ? "call" : "put");
+        signalElement.textContent =
+          data.signal;
 
-        signalMarket.innerText = market;
-        signalExpiry.innerText = expiry;
+        signalElement.className =
+          "signal " +
+          (
+            data.signal === "CALL"
+              ? "call"
+              : data.signal === "PUT"
+                ? "put"
+                : "wait"
+          );
 
-        signalTime.innerText =
-            new Date().toLocaleTimeString();
+        confidenceElement.textContent =
+          "Confidence: " +
+          data.confidence +
+          "%";
 
-        signalBox.style.display = "block";
+        infoElement.innerHTML =
+          "Market: " +
+          data.symbol +
+          "<br>" +
 
-        status.innerText =
-            "Analysis complete.";
+          "Price: " +
+          data.price +
+          "<br>" +
 
-    }, 1200);
-}
+          "RSI: " +
+          data.rsi14 +
+          "<br>" +
 
-</script>
+          "EMA 9: " +
+          data.ema9 +
+          "<br>" +
+
+          "EMA 21: " +
+          data.ema21 +
+          "<br>" +
+
+          "Momentum: " +
+          data.momentumPercent +
+          "%<br>" +
+
+          "Candle: " +
+          data.candleTime;
+
+        updatedElement.textContent =
+          "Analysis updated: " +
+          new Date(data.generatedAt)
+            .toLocaleString();
+
+        status.textContent =
+          "Live market analysis loaded.";
+
+      } catch (error) {
+
+        console.error(error);
+
+        status.textContent =
+          "Waiting for GitHub Actions to generate the first signal.";
+
+        signalElement.textContent =
+          "WAIT";
+
+        signalElement.className =
+          "signal wait";
+
+        confidenceElement.textContent =
+          "Confidence: --";
+
+        infoElement.textContent =
+          error.message;
+      }
+    }
+
+    getSignal();
+
+    setInterval(
+      getSignal,
+      60000
+    );
+
+  </script>
 
 </body>
-    </html>
+
+          </html>
