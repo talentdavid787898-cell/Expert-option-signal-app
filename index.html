@@ -225,8 +225,77 @@ async function getSignal() {
 
     // Cache-buster so the browser doesn't keep showing
     // an old signal.json.
-    const response = await fetch(
-      "signal.json?t=" + Date.now(),
+    async function getSignal() {
+  const status = document.getElementById("status");
+
+  status.textContent = "Getting latest available signal...";
+
+  try {
+    const url = new URL("signal.json", window.location.href);
+    url.searchParams.set("t", Date.now());
+
+    const response = await fetch(url.toString(), {
+      cache: "no-store"
+    });
+
+    if (!response.ok) {
+      throw new Error("signal.json returned HTTP " + response.status);
+    }
+
+    const data = await response.json();
+
+    if (data.success !== true) {
+      throw new Error("Invalid signal data");
+    }
+
+    const signal = document.getElementById("signal");
+
+    signal.textContent = data.signal;
+    signal.className = "";
+
+    if (data.signal === "CALL") {
+      signal.classList.add("call");
+    } else if (data.signal === "PUT") {
+      signal.classList.add("put");
+    } else {
+      signal.classList.add("wait");
+    }
+
+    document.getElementById("confidence").textContent =
+      data.confidence + "%";
+
+    document.getElementById("symbol").textContent =
+      data.symbol;
+
+    document.getElementById("price").textContent =
+      data.price;
+
+    document.getElementById("rsi").textContent =
+      data.rsi14;
+
+    document.getElementById("ema9").textContent =
+      data.ema9;
+
+    document.getElementById("ema21").textContent =
+      data.ema21;
+
+    document.getElementById("momentum").textContent =
+      data.momentumPercent + "%";
+
+    document.getElementById("candle").textContent =
+      data.candleTime;
+
+    document.getElementById("updated").textContent =
+      new Date(data.generatedAt).toLocaleString();
+
+    status.textContent = "Latest published market analysis loaded.";
+
+  } catch (error) {
+    console.error(error);
+    status.textContent =
+      "Unable to load the latest signal. Try again shortly.";
+  }
+    }
       {
         cache: "no-store"
       }
