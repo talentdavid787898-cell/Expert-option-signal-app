@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: Generate live market signal
         env:
@@ -34,41 +36,14 @@ jobs:
           const outputsize = 100;
 
           const url =
-            "https://api.twelvedata.com/time_series" +
-            "?symbol=" + encodeURIComponent(symbol) +
-            "&interval=" + interval +
-            "&outputsize=" + outputsize +
-            "&timezone=UTC" +
-            "&apikey=" + encodeURIComponent(API_KEY);
-
-          console.log("Requesting latest EUR/USD market data...");
-
-          const response = await fetch(url);
-          const data = await response.json();
-
-          if (!response.ok || data.status === "error") {
-            throw new Error(
-              "Twelve Data error: " +
-              (data.message || response.status)
-            );
-          }
-
-          if (!Array.isArray(data.values) || data.values.length < 30) {
-            throw new Error("Not enough market data returned.");
-          }
-
-          // Twelve Data returns newest first.
-          const candles = data.values
-            .map(v => ({
-              datetime: v.datetime,
-              open: Number(v.open),
-              high: Number(v.high),
-              low: Number(v.low),
-              close: Number(v.close)
-            }))
-            .reverse();
-
-          const closes = candles.map(c => c.close);
+            "https://api.twelvedata.com/time_series?" +
+            new URLSearchParams({
+              symbol: symbol,
+              interval: interval,
+              outputsize: String(outputsize),
+              timezone: "UTC",
+              apikey: API_KEY
+            });
 
           function sma(values, period) {
             if (values.length < period) return null;
@@ -83,10 +58,7 @@ jobs:
 
             const multiplier = 2 / (period + 1);
 
-            let average =
-              values
-                .slice(0, period)
-                .reduce((a, b) => a + b, 0) / period;
+            let average = sma(values.slice(0, period), period);
 
             for (let i = period; i < values.length; i++) {
               average =
@@ -105,7 +77,7 @@ jobs:
             for (let i = 1; i <= period; i++) {
               const change = values[i] - values[i - 1];
 
-              if (change > 0) {
+              if (change >= 0) {
                 gains += change;
               } else {
                 losses += Math.abs(change);
@@ -118,8 +90,8 @@ jobs:
             for (let i = period + 1; i < values.length; i++) {
               const change = values[i] - values[i - 1];
 
-              const gain = Math.max(change, 0);
-              const loss = Math.max(-change, 0);
+              const gain = change > 0 ? change : 0;
+              const loss = change < 0 ? Math.abs(change) : 0;
 
               avgGain =
                 ((avgGain * (period - 1)) + gain) / period;
@@ -135,81 +107,181 @@ jobs:
             return 100 - (100 / (1 + rs));
           }
 
-          const price = closes[closes.length - 1];
+          function parseCandleTime(datetime) {
+            if (!datetime) return NaN;
 
-          const ema9 = ema(closes, 9);
-          const ema21 = ema(closes, 21);
-          const rsi14 = rsi(closes, 14);
+            const normalized = datetime.includes("T")
+              ? datetime
+              : datetime.replace(" ", "T");
 
-          const previousPrice = closes[closes.length - 2];
-
-          const momentum =
-            ((price - previousPrice) / previousPrice) * 100;
-
-          let score = 0;
-
-          // Trend
-          if (ema9 > ema21) score += 2;
-          if (ema9 < ema21) score -= 2;
-
-          // RSI
-          if (rsi14 >= 55 && rsi14 <= 70) score += 1;
-          if (rsi14 <= 45 && rsi14 >= 30) score -= 1;
-
-          // Momentum
-          if (momentum > 0) score += 1;
-          if (momentum < 0) score -= 1;
-
-          let signal = "WAIT";
-
-          if (score >= 2) signal = "CALL";
-          if (score <= -2) signal = "PUT";
-
-          // Confidence is a strength score, NOT a win probability.
-          let confidence = 50 + Math.min(Math.abs(score) * 8, 32);
-
-          if (signal === "WAIT") {
-            confidence = 50;
+            return Date.parse(normalized.endsWith("Z")
+              ? normalized
+              : normalized + "Z");
           }
 
-          confidence = Math.round(confidence);
+          async function main() {
+            console.log("Requesting fresh EUR/USD market data...");
 
-          const result = {
-            status: "ok",
-            symbol,
-            interval,
-            signal,
-            confidence,
-            price: Number(price.toFixed(5)),
-            rsi: Number(rsi14.toFixed(2)),
-            ema9: Number(ema9.toFixed(6)),
-            ema21: Number(ema21.toFixed(6)),
-            momentum: Number(momentum.toFixed(4)),
-            candle: candles[candles.length - 1].datetime,
-            updatedAt: new Date().toISOString(),
-            provider: "Twelve Data",
-            disclaimer:
-              "Statistical analysis only. Not financial advice and not a guaranteed prediction."
-          };
+            const response = await fetch(url, {
+              method: "GET",
+              cache: "no-store",
+              headers: {
+                "Cache-Control": "no-cache",
+                "Pragma": "no-cache"
+              }
+            });
 
-          fs.writeFileSync(
-            "signal.json",
-            JSON.stringify(result, null, 2)
-          );
+            if (!response.ok) {
+              throw new Error(
+                `Twelve Data HTTP error: ${response.status}`
+              );
+            }
 
-          console.log(JSON.stringify(result, null, 2));
-          NODE
+            const data = await response.json();
 
-      - name: Publish signal
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            if (data.status === "error") {
+              throw new Error(
+                data.message || "Twelve Data returned an error."
+              );
+            }
 
-          git add signal.json
+            if (!Array.isArray(data.values) || data.values.length < 30) {
+              throw new Error(
+                "Not enough market data returned."
+              );
+            }
 
-          if git diff --cached --quiet; then
-            echo "No signal change to commit."
-          else
-            git commit -m "Update live market signal"
-            git push
-          fi
+            const now = Date.now();
+
+            /*
+             * Convert the API candles to a clean format.
+             * We use UTC and remove any candle that is somehow
+             * dated in the future.
+             */
+            const candles = data.values
+              .map(c => ({
+                datetime: c.datetime,
+                time: parseCandleTime(c.datetime),
+                close: Number(c.close)
+              }))
+              .filter(c =>
+                Number.isFinite(c.time) &&
+                Number.isFinite(c.close) &&
+                c.time <= now
+              )
+              .sort((a, b) => a.time - b.time);
+
+            if (candles.length < 30) {
+              throw new Error(
+                "Not enough valid current candles returned."
+              );
+            }
+
+            const closes = candles.map(c => c.close);
+
+            const latest = candles[candles.length - 1];
+
+            const price = latest.close;
+
+            const ema9 = ema(closes, 9);
+            const ema21 = ema(closes, 21);
+            const rsi14 = rsi(closes, 14);
+
+            const recent = closes.slice(-6);
+
+            const oldPrice = recent[0];
+
+            const momentumPercent =
+              ((price - oldPrice) / oldPrice) * 100;
+
+            let score = 0;
+
+            /*
+             * TREND
+             */
+            if (ema9 > ema21) {
+              score += 2;
+            }
+
+            if (ema9 < ema21) {
+              score -= 2;
+            }
+
+            /*
+             * RSI
+             */
+            if (rsi14 >= 55 && rsi14 <= 70) {
+              score += 1;
+            }
+
+            if (rsi14 <= 45 && rsi14 >= 30) {
+              score -= 1;
+            }
+
+            /*
+             * MOMENTUM
+             */
+            if (momentumPercent > 0.01) {
+              score += 1;
+            }
+
+            if (momentumPercent < -0.01) {
+              score -= 1;
+            }
+
+            let signal = "WAIT";
+
+            if (score >= 2) {
+              signal = "CALL";
+            } else if (score <= -2) {
+              signal = "PUT";
+            }
+
+            let confidence;
+
+            if (signal === "WAIT") {
+              confidence = 50 + Math.abs(score) * 3;
+            } else {
+              confidence = 55 + Math.abs(score) * 7;
+            }
+
+            confidence = Math.min(
+              85,
+              Math.max(50, confidence)
+            );
+
+            const result = {
+              success: true,
+              source: "Twelve Data",
+              symbol: symbol,
+              interval: interval,
+              signal: signal,
+              confidence: confidence,
+              price: Number(price.toFixed(6)),
+              ema9: Number(ema9.toFixed(6)),
+              ema21: Number(ema21.toFixed(6)),
+              rsi14: Number(rsi14.toFixed(2)),
+              momentumPercent: Number(
+                momentumPercent.toFixed(4)
+              ),
+              candleTime: latest.datetime,
+              generatedAt: new Date().toISOString(),
+              methodology:
+                "EMA trend + RSI + short-term momentum",
+              warning:
+                "Market analysis is probabilistic and is not a guaranteed prediction."
+            };
+
+            fs.writeFileSync(
+              "signal.json",
+              JSON.stringify(result, null, 2)
+            );
+
+            console.log(
+              JSON.stringify(result, null, 2)
+            );
+          }
+
+          main().catch(error => {
+            console.error(error);
+            process.exit(1);
