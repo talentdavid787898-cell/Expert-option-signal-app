@@ -14,13 +14,12 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
+        uses: actions/checkout@v5
 
       - name: Generate live market signal
         env:
           TWELVE_DATA_API_KEY: ${{ secrets.TWELVE_DATA_API_KEY }}
+
         run: |
           node <<'NODE'
           const fs = require("fs");
@@ -41,7 +40,6 @@ jobs:
               symbol: symbol,
               interval: interval,
               outputsize: String(outputsize),
-              timezone: "UTC",
               apikey: API_KEY
             });
 
@@ -58,7 +56,9 @@ jobs:
 
             const multiplier = 2 / (period + 1);
 
-            let average = sma(values.slice(0, period), period);
+            let average =
+              values.slice(0, period)
+                .reduce((a, b) => a + b, 0) / period;
 
             for (let i = period; i < values.length; i++) {
               average =
@@ -107,28 +107,11 @@ jobs:
             return 100 - (100 / (1 + rs));
           }
 
-          function parseCandleTime(datetime) {
-            if (!datetime) return NaN;
-
-            const normalized = datetime.includes("T")
-              ? datetime
-              : datetime.replace(" ", "T");
-
-            return Date.parse(normalized.endsWith("Z")
-              ? normalized
-              : normalized + "Z");
-          }
-
           async function main() {
-            console.log("Requesting fresh EUR/USD market data...");
+            console.log("Requesting latest EUR/USD market data...");
 
             const response = await fetch(url, {
-              method: "GET",
-              cache: "no-store",
-              headers: {
-                "Cache-Control": "no-cache",
-                "Pragma": "no-cache"
-              }
+              cache: "no-store"
             });
 
             if (!response.ok) {
@@ -145,60 +128,58 @@ jobs:
               );
             }
 
-            if (!Array.isArray(data.values) || data.values.length < 30) {
+            if (
+              !Array.isArray(data.values) ||
+              data.values.length < 30
+            ) {
               throw new Error(
                 "Not enough market data returned."
               );
             }
 
-            const now = Date.now();
+            /*
+              Twelve Data normally returns newest candles first.
+              Reverse them so calculations run oldest -> newest.
+            */
+
+            const candles = [...data.values].reverse();
+
+            const closes =
+              candles.map(c => Number(c.close));
+
+            const latest =
+              candles[candles.length - 1];
+
+            const price =
+              Number(latest.close);
+
+            const ema9 =
+              ema(closes, 9);
+
+            const ema21 =
+              ema(closes, 21);
+
+            const rsi14 =
+              rsi(closes, 14);
 
             /*
-             * Convert the API candles to a clean format.
-             * We use UTC and remove any candle that is somehow
-             * dated in the future.
-             */
-            const candles = data.values
-              .map(c => ({
-                datetime: c.datetime,
-                time: parseCandleTime(c.datetime),
-                close: Number(c.close)
-              }))
-              .filter(c =>
-                Number.isFinite(c.time) &&
-                Number.isFinite(c.close) &&
-                c.time <= now
-              )
-              .sort((a, b) => a.time - b.time);
+              Short-term momentum.
+              Compare the newest price with the price
+              five candles earlier.
+            */
 
-            if (candles.length < 30) {
-              throw new Error(
-                "Not enough valid current candles returned."
-              );
-            }
-
-            const closes = candles.map(c => c.close);
-
-            const latest = candles[candles.length - 1];
-
-            const price = latest.close;
-
-            const ema9 = ema(closes, 9);
-            const ema21 = ema(closes, 21);
-            const rsi14 = rsi(closes, 14);
-
-            const recent = closes.slice(-6);
-
-            const oldPrice = recent[0];
+            const previousPrice =
+              closes[closes.length - 6];
 
             const momentumPercent =
-              ((price - oldPrice) / oldPrice) * 100;
+              ((price - previousPrice) / previousPrice) * 100;
+
+            /*
+              Trend strength.
+            */
 
             let score = 0;
 
-            /*
-             * TREND
-             */
             if (ema9 > ema21) {
               score += 2;
             }
@@ -208,26 +189,32 @@ jobs:
             }
 
             /*
-             * RSI
-             */
-            if (rsi14 >= 55 && rsi14 <= 70) {
+              RSI confirmation.
+            */
+
+            if (rsi14 >= 55 && rsi14 < 70) {
               score += 1;
             }
 
-            if (rsi14 <= 45 && rsi14 >= 30) {
+            if (rsi14 <= 45 && rsi14 > 30) {
               score -= 1;
             }
 
             /*
-             * MOMENTUM
-             */
-            if (momentumPercent > 0.01) {
+              Momentum confirmation.
+            */
+
+            if (momentumPercent > 0.005) {
               score += 1;
             }
 
-            if (momentumPercent < -0.01) {
+            if (momentumPercent < -0.005) {
               score -= 1;
             }
+
+            /*
+              Signal.
+            */
 
             let signal = "WAIT";
 
@@ -237,37 +224,73 @@ jobs:
               signal = "PUT";
             }
 
+            /*
+              Confidence.
+            */
+
             let confidence;
 
             if (signal === "WAIT") {
-              confidence = 50 + Math.abs(score) * 3;
+              confidence =
+                50 + Math.abs(score) * 3;
             } else {
-              confidence = 55 + Math.abs(score) * 7;
+              confidence =
+                55 + Math.abs(score) * 7;
             }
 
-            confidence = Math.min(
-              85,
-              Math.max(50, confidence)
-            );
+            confidence =
+              Math.min(
+                85,
+                Math.max(50, confidence)
+              );
+
+            /*
+              Create the signal file.
+            */
 
             const result = {
               success: true,
+
               source: "Twelve Data",
+
               symbol: symbol,
+
               interval: interval,
+
               signal: signal,
-              confidence: confidence,
-              price: Number(price.toFixed(6)),
-              ema9: Number(ema9.toFixed(6)),
-              ema21: Number(ema21.toFixed(6)),
-              rsi14: Number(rsi14.toFixed(2)),
+
+              confidence: Number(
+                confidence.toFixed(0)
+              ),
+
+              price: Number(
+                price.toFixed(5)
+              ),
+
+              rsi14: Number(
+                rsi14.toFixed(2)
+              ),
+
+              ema9: Number(
+                ema9.toFixed(6)
+              ),
+
+              ema21: Number(
+                ema21.toFixed(6)
+              ),
+
               momentumPercent: Number(
                 momentumPercent.toFixed(4)
               ),
+
               candleTime: latest.datetime,
-              generatedAt: new Date().toISOString(),
+
+              generatedAt:
+                new Date().toISOString(),
+
               methodology:
-                "EMA trend + RSI + short-term momentum",
+                "EMA 9/21 trend + RSI 14 + 5-minute price momentum",
+
               warning:
                 "Market analysis is probabilistic and is not a guaranteed prediction."
             };
@@ -285,3 +308,19 @@ jobs:
           main().catch(error => {
             console.error(error);
             process.exit(1);
+          });
+          NODE
+
+      - name: Publish signal
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add signal.json
+
+          if git diff --cached --quiet; then
+            echo "No signal changes to publish."
+          else
+            git commit -m "Update live market signal"
+            git push
+          fi
