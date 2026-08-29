@@ -6,12 +6,12 @@
   "signal": "PUT",
   "confidence": 69,
   "price": 1.1582,
-  "rsi14": 47.35,
-  "ema9": 1.158219,
-  "ema21": 1.158225,
+  "rsi14": 47.63,
+  "ema9": 1.158214,
+  "ema21": 1.158218,
   "momentumPercent": -0.0026,
-  "candleTime": "2026-08-29 16:26:00",
-  "generatedAt": "2026-08-29T06:28:15.542Z",
+  "candleTime": "2026-08-29 16:35:00",
+  "generatedAt": "2026-08-29T06:36:54.303Z",
   "methodology": "EMA 9/21 trend + RSI 14 + 5-minute price momentum",
   "warning": "Market analysis is probabilistic and is not a guaranteed prediction."
 }
