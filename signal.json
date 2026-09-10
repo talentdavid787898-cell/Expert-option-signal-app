@@ -11,7 +11,7 @@
   "ema21": 1.163188,
   "momentumPercent": -0.0077,
   "candleTime": "2026-09-10 10:44:00",
-  "generatedAt": "2026-09-10T04:35:09.522Z",
+  "generatedAt": "2026-09-10T04:47:46.767Z",
   "methodology": "EMA 9/21 trend + RSI 14 + 5-minute price momentum",
   "warning": "Market analysis is probabilistic and is not a guaranteed prediction."
 }
