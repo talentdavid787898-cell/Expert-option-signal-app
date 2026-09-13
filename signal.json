@@ -6,12 +6,12 @@
   "signal": "WAIT",
   "confidence": 53,
   "price": 1.15982,
-  "rsi14": 51.5,
-  "ema9": 1.159775,
-  "ema21": 1.159792,
-  "momentumPercent": 0.006,
-  "candleTime": "2026-09-14 07:38:00",
-  "generatedAt": "2026-09-13T21:40:15.687Z",
+  "rsi14": 52.17,
+  "ema9": 1.159788,
+  "ema21": 1.15979,
+  "momentumPercent": 0.0069,
+  "candleTime": "2026-09-14 07:48:00",
+  "generatedAt": "2026-09-13T21:49:21.562Z",
   "methodology": "EMA 9/21 trend + RSI 14 + 5-minute price momentum",
   "warning": "Market analysis is probabilistic and is not a guaranteed prediction."
 }
