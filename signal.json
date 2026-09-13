@@ -6,12 +6,12 @@
   "signal": "CALL",
   "confidence": 69,
   "price": 1.16002,
-  "rsi14": 53.19,
-  "ema9": 1.160015,
-  "ema21": 1.159984,
-  "momentumPercent": 0.0034,
-  "candleTime": "2026-09-13 17:53:00",
-  "generatedAt": "2026-09-13T07:54:25.893Z",
+  "rsi14": 51.22,
+  "ema9": 1.160031,
+  "ema21": 1.160016,
+  "momentumPercent": 0,
+  "candleTime": "2026-09-13 18:04:00",
+  "generatedAt": "2026-09-13T08:05:53.206Z",
   "methodology": "EMA 9/21 trend + RSI 14 + 5-minute price momentum",
   "warning": "Market analysis is probabilistic and is not a guaranteed prediction."
 }
